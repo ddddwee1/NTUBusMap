@@ -1,0 +1,21 @@
+<resources>
+    <!--
+    TODO: Before you run your application, you need a Google Maps API key.
+
+    To get one, follow this link, follow the directions and press "Create" at the end:
+
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=03:40:C1:A1:89:30:21:95:FF:FB:9E:92:E9:F7:08:E0:E8:92:88:74%3Bcom.potato.ntumaps.ntubusmap
+
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=25:F5:B5:95:13:27:2F:DA:2E:71:6D:28:86:00:BA:A6:FA:F6:7F:CF%3Bcom.potato.ntumaps.ntubusmap
+
+    You can also add your credentials to an existing key, using this line:
+    03:40:C1:A1:89:30:21:95:FF:FB:9E:92:E9:F7:08:E0:E8:92:88:74;com.potato.ntumaps.ntubusmap
+
+    Alternatively, follow the directions here:
+    https://developers.google.com/maps/documentation/android/start#get-key
+
+    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
+    string in this file.
+    -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyBkD9dYA5MEHsQuhUE0thJs28PqxCOPTEE</string>
+</resources>
