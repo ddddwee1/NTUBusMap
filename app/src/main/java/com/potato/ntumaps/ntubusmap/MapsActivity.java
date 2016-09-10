@@ -1,5 +1,7 @@
 package com.potato.ntumaps.ntubusmap;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,6 +11,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.MarginLayoutParamsCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
@@ -26,6 +29,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.lang.annotation.Target;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,7 +39,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
     ArrayList<Vehicle> vehicles = new ArrayList<>();
-    ArrayList<Vehicle> vehicles2 = new ArrayList<>();
     ArrayList<Marker> markers = new ArrayList<>();
     int chosenType=0;
     String ver = "0.0.1";
@@ -51,9 +55,16 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        appOn = true;
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setBackgroundColor(Color.rgb(255,255,255));
+
+        String lineStr= Functions.getStrFromFile(MapConstants.lineFile);
+
+        if(!lineStr.equals("")){
+            chosenType = Integer.valueOf(lineStr);
+        }
 
         Thread tUpdate = new Thread(checkUpdate);
         tUpdate.start();
@@ -73,7 +84,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                     .show();
         }
 
-        appOn = true;
+        requestReadnWrite();
+    }
+
+    @TargetApi(23)
+    public void requestReadnWrite(){
+        requestPermissions(
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
+                112);
     }
 
     @Override
@@ -96,12 +114,35 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(Intent.createChooser(intent, getTitle()));
         }
+        if(item.getItemId()==R.id.appinf){
+            intent.setClass(MapsActivity.this,Appinfo.class);
+            startActivity(intent);
+        }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onDestroy() {
         appOn = false;
+        try {
+            Functions.writeToFile(MapConstants.lineFile, String.valueOf(chosenType));
+        }catch (Exception e){
+            System.out.println("ckp1");
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        appOn = false;
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        appOn = true;
+        getBusInf();
+        super.onResume();
     }
 
     @Override
@@ -112,9 +153,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
         //mMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder().tilt(0).bearing(0).target(ltlg).build()));
         mMap.moveCamera(up);
         mMap.animateCamera(CameraUpdateFactory.zoomTo(15.27f));
-        getBusInf();
+
         dl = new drawLine(mMap);
-        dl.drawRed();
+        drawLines();
+
+        fab.setImageResource(busRes[chosenType]);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -123,23 +166,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                 chosenType = chosenType%4;
                 redrawMarkers();
                 if(chosenType<4){
-                    dl.removeLines();
-                    switch (chosenType){
-                        case 0:
-                            dl.drawRed();
-                            break;
-                        case 1:
-                            dl.drawBlue();
-                            break;
-                        case 2:
-                            dl.drawRider();
-                            break;
-                        case 3:
-                            dl.drawTotal();
-                            break;
-                        default:
-                            break;
-                    }
+                    drawLines();
                     fab.setImageAlpha(255);
                     fab.setImageResource(busRes[chosenType]);
                     System.out.println("chosen:"+chosenType);
@@ -148,53 +175,92 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                 }
             }
         });
+
     }
 
-    public void getBusInf(){
-        Thread t = new Thread(getBusInfo);
-        t.start();
-    }
-
-    Runnable getBusInfo = new Runnable() {
-        @Override
-        public void run() {
-            try{
-                while(true) {
-                    //System.out.println("check1");
-                    getBuses(1, MapConstants.blueurl);
-                    getBuses(0, MapConstants.redurl);
-                    getBuses(2, MapConstants.greenurl);
-                    getBuses(2, MapConstants.brownurl);
-                    if (vehicles2.size()==0){
-                        Message msg = new Message();
-                        msg.setTarget(nobusHandler);
-                        msg.sendToTarget();
-                    }
-                    Message msg = new Message();
-                    msg.setTarget(updateBusUI);
-                    msg.sendToTarget();
-                    Thread.sleep(100);
-                    //divide into 4 different arrays and refresh them separately.
-                }
-            }catch (Exception e){
-
-            }
+    public void drawLines(){
+        dl.removeLines();
+        switch (chosenType){
+            case 0:
+                dl.drawRed();
+                break;
+            case 1:
+                dl.drawBlue();
+                break;
+            case 2:
+                dl.drawRider();
+                break;
+            case 3:
+                dl.drawTotal();
+                break;
+            default:
+                break;
         }
-    };
-
-    public void getBuses(int type,String url) throws  Exception{
-        String blue = Functions.getStrFromUrl(url);
-        vehicles2.addAll(Functions.getVehicles(blue,type));
     }
+
+    int[] threadMarker = {0,0,0,0};
+    int total = 0;
+    public void getBusInf(){
+        Thread tRed = new Thread(createRunnableGetBusInf(MapConstants.redurl,0,0));
+        tRed.start();
+        Thread tBlue = new Thread(createRunnableGetBusInf(MapConstants.blueurl,1,1));
+        tBlue.start();
+        Thread tGreen = new Thread(createRunnableGetBusInf(MapConstants.greenurl,2,2));
+        tGreen.start();
+        Thread tWeekend = new Thread(createRunnableGetBusInf(MapConstants.brownurl,3,3));
+        tWeekend.start();
+    }
+
+    public Runnable createRunnableGetBusInf(final String url, final int type, final int arrNum){
+        Runnable getBusInfo = new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    while(appOn) {
+                        if (threadMarker[arrNum]==1){
+                            Thread.sleep(2000);
+                            continue;
+                        }
+                        String blue = Functions.getStrFromUrl(url);
+                        ArrayList<Vehicle> buffer = Functions.getVehicles(blue,type);
+                        for (int i=vehicles.size()-1;i>=0;i--){
+                            if (vehicles.get(i).getType()==type){
+                                vehicles.remove(i);
+                            }
+                        }
+                        vehicles.addAll(buffer);
+                        if (threadMarker[arrNum]==0){
+                            threadMarker[arrNum] = 1;
+                            total++;
+                        }
+                        Message msg = new Message();
+                        msg.setTarget(updateBusUI);
+                        msg.sendToTarget();
+
+                        Thread.sleep(2000);
+                        //divide into 4 different arrays and refresh them separately.
+                    }
+                }catch (Exception e){
+                    System.out.println("ckp2");
+                }
+            }
+        };
+        return getBusInfo;
+    }
+
 
     Handler updateBusUI = new Handler(){
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            redrawMarkers();
-            //clear vehicles
-            vehicles = vehicles2;
-            vehicles2 = new ArrayList<>();
+            if(total ==4 ) {
+                redrawMarkers();
+                total = 0;
+                threadMarker[0] = 0;
+                threadMarker[1] = 0;
+                threadMarker[2] = 0;
+                threadMarker[3] = 0;
+            }
         }
     };
 
@@ -209,9 +275,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
     };
 
     public void redrawMarkers(){
+        System.out.println("redraw markers");
         for (int i=0;i<markers.size();i++){
             markers.get(i).remove();
-            System.out.println("remove mark");
+            //System.out.println("remove mark");
         }
         markers = new ArrayList<>();
         // update UI from vehicles
@@ -226,7 +293,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                 mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.point)));
                 markers.add(mk);
             }
-            if ((chosenType==3||chosenType==2)&&vehicles.get(i).getType()==2){
+            if ((chosenType==3||chosenType==2)&&(vehicles.get(i).getType()==2||vehicles.get(i).getType()==3)){
                 mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bpoint)));
                 markers.add(mk);
             }
@@ -245,7 +312,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                     msg.sendToTarget();
                 }
             }catch (Exception e){
-
+                System.out.println("ckp3");
             }
         }
     };
@@ -283,7 +350,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
             Thread t = new Thread(uplodadStatstic);
             t.start();
         }catch (Exception e){
-
+            System.out.println("ckp4");
         }
 
     }
@@ -298,7 +365,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
             try {
                 Functions.getStrFromUrl("http://50.116.1.90/NTUBUS2/comm.php?comment=" + will + "&user=" + deviceinf);
             }catch (Exception e){
-
+                System.out.println("ckp5");
             }
         }
     };
@@ -314,7 +381,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
         public void run() {
             try {
                 String annover = Functions.getStrFromUrl(MapConstants.annVersion);
+                System.out.println("annver"+annover);
                 String annover2 = Functions.getStrFromFile(MapConstants.annoFile);
+                System.out.println("annver2"+annover2);
                 if (!annover.equals(annover2)){
                     announcement = Functions.getStrFromUrl(MapConstants.announce,true);
                     Functions.writeToFile(MapConstants.annoFile,annover);
@@ -323,7 +392,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                     msg.sendToTarget();
                 }
             }catch ( Exception e){
-
+                System.out.println("ckp6");
             }
         }
     };

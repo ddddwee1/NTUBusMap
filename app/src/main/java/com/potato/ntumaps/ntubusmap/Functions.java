@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,11 +52,12 @@ public class Functions {
                 v.setType(type);
                 // A little bit ... ah...
                 result.add(v);
-                System.out.println("check2");
+                //System.out.println("check2");
             }
 
         }catch (Exception e){
             System.out.println(e);
+            System.out.println("ckp12");
         }
         return result;
     }
@@ -65,7 +65,7 @@ public class Functions {
     public static ArrayList<String> xmlGetTag(String key, String input){
         ArrayList<String> result = new ArrayList<>();
         String ptnstr = "<"+key+"(.*?)</"+key+">";
-        System.out.println(ptnstr);
+        //System.out.println(ptnstr);
         Pattern ptn = Pattern.compile(ptnstr);
         Matcher mtc = ptn.matcher(input);
         while (mtc.find()){
@@ -88,7 +88,8 @@ public class Functions {
                 }
             }
         }catch (Exception e){
-
+            System.out.println("ckp11");
+            return "";
         }
         return result;
     }

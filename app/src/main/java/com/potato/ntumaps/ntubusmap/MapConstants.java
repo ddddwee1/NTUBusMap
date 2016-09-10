@@ -11,6 +11,7 @@ public class MapConstants {
     public static String annVersion = "http://50.116.1.90/NTUBUS2/annover.txt";
     public static String announce = "http://50.116.1.90/NTUBUS2/anno.txt";
     public static String annoFile = "sdcard/ntubusmap/annver";
+    public static String lineFile = "sdcard/ntubusmap/Line";
 
     public  static   LatLng[] ltlg179 = {new LatLng(1.33932334709184, 103.70545701843297),
             new LatLng(1.33767771437494, 103.70297847077269),

@@ -4,16 +4,9 @@
     tools:context="com.potato.ntubus.MainActivity" >
 
     <item
-        android:id="@+id/versioninf"
+        android:id="@+id/appinf"
         android:orderInCategory="100"
         android:title="Version info"
         app:showAsAction="never"/>
-
-    <item
-        android:id="@+id/authinf"
-        android:orderInCategory="100"
-        android:title="Author"
-        app:showAsAction="never"/>
-
 
 </menu>

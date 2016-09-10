@@ -14,6 +14,6 @@ public class Appinfo extends AppCompatActivity {
         setContentView(R.layout.activity_appinfo);
 
         tv = (TextView) findViewById(R.id.appInfoText);
-        tv.setText("Author: Cheng Yu\nGitHub: ");
+        tv.setText("Author: Cheng Yu\nGitHub: https://github.com/ddddwee1/NTUBusMap");
     }
 }
