@@ -89,7 +89,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
     public void requestReadnWrite(){
 
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
-            
+            new android.app.AlertDialog.Builder(this)
+                    .setMessage("The request of read/write permission is to store some of your map preference and system announcement. If the permission is rejected, system announce will appear every time you open the app due to loss of essential file")
+                    .create()
+                    .show();
         }
         requestPermissions(
                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
@@ -112,7 +115,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
             intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             intent.putExtra(Intent.EXTRA_SUBJECT, "Share");
-            intent.putExtra(Intent.EXTRA_TEXT, "Ntubus~\n  market://details?id=com.potato.ntumaps.ntubusmap");
+            intent.putExtra(Intent.EXTRA_TEXT, "Ntubus~\n  https://play.google.com/store/apps/details?id=com.potato.ntumaps.ntubusmap");
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(Intent.createChooser(intent, getTitle()));
         }
@@ -283,22 +286,30 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
             //System.out.println("remove mark");
         }
         markers = new ArrayList<>();
+        try{
         // update UI from vehicles
-        for (int i=0;i<vehicles.size();i++){
-            Marker mk;
-            LatLng latlng = new LatLng(vehicles.get(i).getLat(),vehicles.get(i).getLon());
-            if ((chosenType==3||chosenType==0)&&vehicles.get(i).getType()==0){
-                mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.rpoint)));
-                markers.add(mk);
+        for (int i=0;i<vehicles.size();i++) {
+            try {
+                Marker mk;
+                LatLng latlng = new LatLng(vehicles.get(i).getLat(), vehicles.get(i).getLon());
+                if ((chosenType == 3 || chosenType == 0) && vehicles.get(i).getType() == 0) {
+                    mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.rpoint)));
+                    markers.add(mk);
+                }
+                if ((chosenType == 3 || chosenType == 1) && vehicles.get(i).getType() == 1) {
+                    mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.point)));
+                    markers.add(mk);
+                }
+                if ((chosenType == 3 || chosenType == 2) && (vehicles.get(i).getType() == 2 || vehicles.get(i).getType() == 3)) {
+                    mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bpoint)));
+                    markers.add(mk);
+                }
+            }catch ( Exception e){
+                System.out.println("In function drawMarkers:" + e);
             }
-            if ((chosenType==3||chosenType==1)&&vehicles.get(i).getType()==1){
-                mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.point)));
-                markers.add(mk);
-            }
-            if ((chosenType==3||chosenType==2)&&(vehicles.get(i).getType()==2||vehicles.get(i).getType()==3)){
-                mk = mMap.addMarker(new MarkerOptions().position(latlng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bpoint)));
-                markers.add(mk);
-            }
+        }
+
+        }catch (Exception e){
 
         }
     }
@@ -353,6 +364,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
             t.start();
         }catch (Exception e){
             System.out.println("ckp4");
+            deviceinf = "unknown";
+            Thread t = new Thread(uplodadStatstic);
+            t.start();
         }
 
     }
@@ -395,6 +409,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapReadyCallbac
                 }
             }catch ( Exception e){
                 System.out.println("ckp6");
+                try {
+                    announcement = Functions.getStrFromUrl(MapConstants.announce, true);
+                    Message msg = new Message();
+                    msg.setTarget(popUpAnnoHandler);
+                    msg.sendToTarget();
+                }catch (Exception e2){
+                    System.out.println("ckp61");
+                }
             }
         }
     };

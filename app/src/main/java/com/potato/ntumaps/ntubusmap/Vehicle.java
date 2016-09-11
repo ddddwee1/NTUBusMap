@@ -4,7 +4,7 @@ package com.potato.ntumaps.ntubusmap;
  * Created by Administrator on 2016/9/4.
  */
 public class Vehicle {
-    double lat,lon;
+    double lat=0,lon=0;
     int type;
 
     public double getLon() {
