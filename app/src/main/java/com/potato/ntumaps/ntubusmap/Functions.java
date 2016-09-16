@@ -6,8 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +21,7 @@ public class Functions {
     public static String getStrFromUrl(String urlstr, boolean enter) throws Exception{
         String result = "";
         URL url = new URL (urlstr);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        URLConnection conn = url.openConnection();
         InputStream in = conn.getInputStream();
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String buff;
@@ -47,6 +47,7 @@ public class Functions {
 
                 double lat = Double.valueOf(Functions.xmlGetTag("lat", position).get(0).substring(1));
                 double lon = Double.valueOf(Functions.xmlGetTag("lon", position).get(0).substring(1));
+
                 v.setLat(lat);
                 v.setLon(lon);
                 v.setType(type);
@@ -95,6 +96,7 @@ public class Functions {
     }
 
     public static void writeToFile(String dir,String content) throws Exception{
+
         File f = new File(dir);
         if(!f.exists()){
             f.createNewFile();
